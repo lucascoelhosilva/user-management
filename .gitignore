@@ -1,0 +1,12 @@
+.editorconfig
+
+.idea/
+
+.mvn/
+
+
+README.adoc
+api-manager-users.iml
+mvnw
+mvnw.cmd
+target/

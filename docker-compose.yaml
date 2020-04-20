@@ -1,0 +1,26 @@
+version: '3.1'
+services:
+  db:
+    image: postgres
+    container_name: postgresdb
+    environment:
+      POSTGRES_PASSWORD: api-manager-users
+      POSTGRES_USER: api-manager-users
+      POSTGRES_DB: api_manager_users
+  api-manager-user:
+    container_name: api-manager-users
+    image: api-manager-users
+    build: .
+    environment:
+      JAVA_OPTS: "-Djava.security.egd=file:/dev/./urandom -XX:+UseParallelGC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:9009 -Xmx256m"
+      HTTP_PORT: 9090
+      LOGGING_LEVEL: debug
+      DATABASE_URL: "jdbc:postgresql://db:5432/api_manager_users"
+      DATABASE_USER: "api-manager-users"
+      DATABASE_PASSWORD: "api-manager-users"
+      DATABASE_DRIVER_CLASS: "org.postgresql.Driver"
+    ports:
+      - "9090:9090"
+      - "9009:9009"
+    depends_on:
+      - db
