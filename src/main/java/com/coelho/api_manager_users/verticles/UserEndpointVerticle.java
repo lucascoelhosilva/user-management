@@ -14,13 +14,11 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.auth.oauth2.AccessToken;
 import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2ClientOptions;
-import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.CorsHandler;
 
 import java.util.HashSet;
@@ -33,12 +31,15 @@ public class UserEndpointVerticle extends AbstractVerticle {
   protected HttpServer httpServer;
   protected JDBCClient jdbcClient;
   protected OAuth2Auth oauth2;
+  protected WebClient client;
 
   @Override
   public void init(Vertx vertx, Context context) {
     super.init(vertx, context);
+      client = WebClient.create(vertx);
 
-    jdbcClient = JDBCClient.createShared(vertx, new JsonObject()
+
+      jdbcClient = JDBCClient.createShared(vertx, new JsonObject()
       .put("url", config().getString("DATABASE_URL"))
       .put("driver_class", config().getString("DATABASE_DRIVER_CLASS"))
       .put("user", config().getString("DATABASE_USER"))
@@ -47,12 +48,12 @@ public class UserEndpointVerticle extends AbstractVerticle {
     createTableIfNeeded();
 
     oauth2 = OAuth2Auth.create(vertx, new OAuth2ClientOptions()
-      .setClientID("my-client")
-      .setClientSecret("secret")
-      .setSite("http://hydra:4444")
-      .setTokenPath("http://hydra:4444/oauth2/token")
-      .setAuthorizationPath("http://localhost:4444/oauth2/auth")
-      .setFlow(OAuth2FlowType.CLIENT)
+            .setClientID("auth-code-client")
+            .setClientSecret("secret")
+            .setSite(config().getString("HYDRA_PUBLIC_URL"))
+            .setAuthorizationPath("/oauth2/auth")
+            .setTokenPath("http://hydra:4444/oauth2/token")
+            .setIntrospectionPath("http://hydra:4445/oauth2/introspect")
     );
   }
 
@@ -61,35 +62,19 @@ public class UserEndpointVerticle extends AbstractVerticle {
     LOGGER.info("Starting User Endpoint Verticle");
 
     final UserHandler userHandler = new UserHandler(jdbcClient);
-    final AuthenticationHandler authHandler = new AuthenticationHandler(jdbcClient, oauth2);
+    final AuthenticationHandler authHandler = new AuthenticationHandler(jdbcClient, oauth2, client);
     final HealthHandler healthHandler = new HealthHandler(getVertx(), jdbcClient);
+    final RequestHelper requestHelper = new RequestHelper();
 
     Router subRouter = Router.router(getVertx());
     enableCorsSupport(subRouter);
 
-    subRouter.route().handler(BodyHandler.create());
+    subRouter.get("/authorize").handler(authHandler::authorize);
+    subRouter.get("/login").handler(authHandler::login);
+    subRouter.get("/consent").handler(authHandler::consent);
+    subRouter.get("/auth-callback").handler(authHandler::callback);
 
-    subRouter.get("/auth").handler(authHandler::auth);
-
-    subRouter.get("/auth-callback").handler(routingContext -> {
-      JsonObject tokenConfig = new JsonObject();
-      tokenConfig.put("code", routingContext.request().params().get("code"));
-      tokenConfig.put("redirect_uri", "http://localhost:4444/oauth2/auth");
-
-      oauth2.getToken(tokenConfig, res -> {
-        if (res.failed()) {
-          System.err.println("Access Token Error: " + res.cause().getMessage());
-        } else {
-          System.out.println("Got access");
-          // Get the access token object (the authorization code is given from the previous step).
-          final AccessToken token = res.result();
-          System.out.println("Got a token! " + token.toString());
-        }
-      });
-    });
-
-
-    subRouter.route("/users*").handler(RequestHelper::validateAccessToKen);
+    subRouter.route("/users*").handler(requestHelper::validateAccessToKen);
     subRouter.get("/users/count").handler(userHandler::count);
     subRouter.get("/users").handler(userHandler::findAll);
     subRouter.get("/users/:UUID").handler(userHandler::findById);
@@ -104,7 +89,7 @@ public class UserEndpointVerticle extends AbstractVerticle {
     mainRouter.route("/health*").handler(healthHandler.health());
 
     httpServer = getVertx().createHttpServer()
-      .requestHandler(mainRouter::handle)
+      .requestHandler(mainRouter)
       .listen(config().getInteger("HTTP_PORT", Constants.HTTP_SERVER_PORT), ar -> {
         if (ar.succeeded()) {
           future.complete();

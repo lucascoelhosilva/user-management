@@ -9,11 +9,11 @@ services:
     command:
       serve all --dangerous-force-http
     environment:
-      - URLS_SELF_ISSUER=http://127.0.0.1:4444
-      - URLS_CONSENT=http://127.0.0.1:9090/consent
-      - URLS_LOGIN=http://127.0.0.1:9090/api-users/login
-      - URLS_LOGOUT=http://127.0.0.1:9090/api-users/logout
-      - DSN=memory
+      - URLS_SELF_ISSUER=http://localhost:4444
+      - URLS_CONSENT=http://localhost:9090/api-users/consent
+      - URLS_LOGIN=http://localhost:9090/api-users/login
+      - URLS_LOGOUT=http://localhost:9090/api-users/logout
+      - DSN=postgres://hydra:secret@postgresd:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
       - SECRETS_SYSTEM=youReallyNeedToChangeThis
       - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
       - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis

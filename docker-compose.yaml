@@ -19,6 +19,8 @@ services:
       DATABASE_USER: "api-manager-users"
       DATABASE_PASSWORD: "api-manager-users"
       DATABASE_DRIVER_CLASS: "org.postgresql.Driver"
+      HYDRA_PUBLIC_URL: "http://localhost:4444"
+      HYDRA_ADMIN_URL: "http://localhost:4445"
     ports:
       - "9090:9090"
       - "9009:9009"
