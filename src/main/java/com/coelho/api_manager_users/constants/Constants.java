@@ -9,4 +9,8 @@ public class Constants {
   public static final String BASE_PATH = "/api-users";
 
   public static final String APPLICATION_JSON_UTF8 = "application/json; charset=utf-8";
+
+  public static final Long EXPIRES_TOKEN = 3600L;
+
+  public static final String HEADER_AUTHORIZATION = "authorization";
 }

@@ -96,7 +96,6 @@ public class UserHandler {
         rc.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
       }
     });
-
   }
 
   public void delete(RoutingContext rc) {

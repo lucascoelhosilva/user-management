@@ -145,9 +145,9 @@ public class UserRepository {
     });
   }
 
-  public void findUserByEmailAndPassword(JsonArray options, Handler<AsyncResult<User>> handler) {
-    LOGGER.info("[querySingle] options => " + options);
-
+  public void findUserByEmailAndPassword(String email, String password, Handler<AsyncResult<User>> handler) {
+    LOGGER.info("[querySingle] options => email: {0} password: {0}", email, password);
+    JsonArray options = new JsonArray().add(email).add(password);
     String sql = "SELECT * FROM T_USER WHERE email = ? AND password = ?";
 
     jdbcClient.queryWithParams(sql, options, jdbcClientHandler -> {

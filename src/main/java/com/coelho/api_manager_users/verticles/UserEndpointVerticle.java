@@ -1,10 +1,13 @@
 package com.coelho.api_manager_users.verticles;
 
 import com.coelho.api_manager_users.constants.Constants;
+import com.coelho.api_manager_users.exceptions.Exception;
 import com.coelho.api_manager_users.handlers.AuthenticationHandler;
 import com.coelho.api_manager_users.handlers.HealthHandler;
 import com.coelho.api_manager_users.handlers.UserHandler;
+import com.coelho.api_manager_users.hydra.HydraService;
 import com.coelho.api_manager_users.middleware.RequestHelper;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -18,8 +21,10 @@ import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2ClientOptions;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.common.template.TemplateEngine;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
+import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,14 +36,11 @@ public class UserEndpointVerticle extends AbstractVerticle {
   protected HttpServer httpServer;
   protected JDBCClient jdbcClient;
   protected OAuth2Auth oauth2;
-  protected WebClient client;
+  protected HydraService hydraService;
 
   @Override
   public void init(Vertx vertx, Context context) {
     super.init(vertx, context);
-      client = WebClient.create(vertx);
-
-
       jdbcClient = JDBCClient.createShared(vertx, new JsonObject()
       .put("url", config().getString("DATABASE_URL"))
       .put("driver_class", config().getString("DATABASE_DRIVER_CLASS"))
@@ -47,31 +49,53 @@ public class UserEndpointVerticle extends AbstractVerticle {
 
     createTableIfNeeded();
 
+    hydraService = new HydraService(config().getString("HYDRA_ADMIN_URL"));
+
     oauth2 = OAuth2Auth.create(vertx, new OAuth2ClientOptions()
             .setClientID("auth-code-client")
             .setClientSecret("secret")
             .setSite(config().getString("HYDRA_PUBLIC_URL"))
             .setAuthorizationPath("/oauth2/auth")
             .setTokenPath("http://hydra:4444/oauth2/token")
-            .setIntrospectionPath("http://hydra:4445/oauth2/introspect")
-    );
+            .setIntrospectionPath("http://hydra:4445/oauth2/introspect"));
   }
 
   @Override
   public void start(Future<Void> future) {
     LOGGER.info("Starting User Endpoint Verticle");
 
+    // In order to use a Thymeleaf template we first need to create an engine
+    final TemplateEngine engine = HandlebarsTemplateEngine.create(vertx);
+
     final UserHandler userHandler = new UserHandler(jdbcClient);
-    final AuthenticationHandler authHandler = new AuthenticationHandler(jdbcClient, oauth2, client);
+    final AuthenticationHandler authHandler = new AuthenticationHandler(jdbcClient, oauth2, hydraService, engine);
     final HealthHandler healthHandler = new HealthHandler(getVertx(), jdbcClient);
-    final RequestHelper requestHelper = new RequestHelper();
+    final RequestHelper requestHelper = new RequestHelper(hydraService);
 
     Router subRouter = Router.router(getVertx());
     enableCorsSupport(subRouter);
 
+    subRouter.route().handler(BodyHandler.create());
+
+    subRouter.route().failureHandler(ctx -> {
+      Exception exception = (Exception) ctx.failure();
+      final JsonObject error = new JsonObject()
+              .put("timestamp", System.nanoTime())
+              .put("status", exception.statusCode())
+              .put("error", HttpResponseStatus.valueOf(exception.statusCode()).reasonPhrase())
+              .put("path", ctx.normalisedPath());
+      if(exception.getMessage() != null) {
+        error.put("message", exception.getMessage());
+      }
+      ctx.response().setStatusCode(exception.statusCode());
+      ctx.response().end(error.encode());
+    });
+
     subRouter.get("/authorize").handler(authHandler::authorize);
-    subRouter.get("/login").handler(authHandler::login);
-    subRouter.get("/consent").handler(authHandler::consent);
+    subRouter.get("/login").handler(authHandler::getLogin);
+    subRouter.post("/login").handler(authHandler::login);
+    subRouter.get("/consent").handler(authHandler::getConsent);
+    subRouter.post("/consent").handler(authHandler::consent);
     subRouter.get("/auth-callback").handler(authHandler::callback);
 
     subRouter.route("/users*").handler(requestHelper::validateAccessToKen);

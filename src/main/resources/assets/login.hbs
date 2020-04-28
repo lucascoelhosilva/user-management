@@ -8,17 +8,22 @@
         <h2>Please login</h2><br>
 
         <br>
-            (Username is 'tim', password is 'sausages')
+            (Username is 'tim', password is 'tim')
         <br>
         <br>
-        <form action="/loginhandler" method="post">
+        <form action="/api-users/login" method="post">
+            <input type="hidden" name="login_challenge" value="{{login_challenge}}" />
             <div>
                 <label>Username:</label>
-                <input type="text" name="username"/>
+                <input type="text" name="email"/>
             </div>
             <div>
                 <label>Password:</label>
                 <input type="password" name="password"/>
+            </div>
+            <div>
+                <label>Remember me:</label>
+                <input type="checkbox" name="remember"  />
             </div>
             <div>
                 <input type="submit" value="Log In"/>

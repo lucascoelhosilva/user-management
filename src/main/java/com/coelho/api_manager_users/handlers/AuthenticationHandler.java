@@ -1,115 +1,177 @@
 package com.coelho.api_manager_users.handlers;
 
+import com.coelho.api_manager_users.constants.Constants;
+import com.coelho.api_manager_users.exceptions.UnauthorizedException;
+import com.coelho.api_manager_users.hydra.HydraService;
 import com.coelho.api_manager_users.repositories.UserRepository;
-import com.coelho.api_manager_users.security.hydra.HydraService;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.Cookie;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.common.template.TemplateEngine;
 import sh.ory.hydra.model.AcceptConsentRequest;
 import sh.ory.hydra.model.AcceptLoginRequest;
 import sh.ory.hydra.model.CompletedRequest;
 import sh.ory.hydra.model.ConsentRequest;
 import sh.ory.hydra.model.LoginRequest;
 import sh.ory.hydra.model.OAuth2TokenIntrospection;
+import sh.ory.hydra.model.RejectRequest;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class AuthenticationHandler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationHandler.class);
 
-  private final UserRepository userRepository;
-  private OAuth2Auth oauth2;
-  private HydraService hydraService;
-  private WebClient client;
+  private static final String LOGIN_CHALLENGE = "login_challenge";
+  private static final String CONSENT_CHALLENGE = "consent_challenge";
 
-  public AuthenticationHandler(JDBCClient jdbcClient, OAuth2Auth oauth2, WebClient client) {
+  private final UserRepository userRepository;
+  private final OAuth2Auth oauth2;
+  private final HydraService hydraService;
+  private final TemplateEngine engine;
+
+  public AuthenticationHandler(JDBCClient jdbcClient, OAuth2Auth oauth2, HydraService hydraService, TemplateEngine engine) {
     this.userRepository = new UserRepository(jdbcClient);
     this.oauth2 = oauth2;
-    this.hydraService = new HydraService();
-    this.client = client;
+    this.hydraService = hydraService;
+    this.engine = engine;
   }
 
   public void authorize(RoutingContext rc) {
     String state = UUID.randomUUID().toString();
 
-    String authorization_uri = oauth2.authorizeURL(new JsonObject()
+    String authorizationUri = oauth2.authorizeURL(new JsonObject()
             .put("redirect_uri", "http://localhost:9090/api-users/auth-callback")
-            .put("scope", "offline")
+            .put("scope", "offline openid")
             .put("state", state));
 
-    LOGGER.info("AUTHORIZE REDIRECT == {0}", authorization_uri);
+    LOGGER.debug("AUTHORIZE REDIRECT == {0}", authorizationUri);
 
     rc.response()
             .addCookie(Cookie.cookie("state", state))
-            .putHeader("location", authorization_uri)
-            .setStatusCode(302).end();
+            .putHeader(HttpHeaders.LOCATION, authorizationUri)
+            .setStatusCode(HttpResponseStatus.FOUND.code()).end();
     rc.next();
   }
 
+  public void getLogin(RoutingContext rc) {
+    String challenge = rc.request().getParam(LOGIN_CHALLENGE);
+
+    LoginRequest result = hydraService.getLoginRequest(challenge);
+    LOGGER.debug("GET LOGIN == {0}", result);
+
+    if (Objects.equals(result.getSkip(), true)) {
+      AcceptLoginRequest acceptLoginRequest = new AcceptLoginRequest();
+      acceptLoginRequest.setSubject(result.getSubject());
+      CompletedRequest completed = hydraService.acceptLoginRequest(challenge, acceptLoginRequest);
+      String redirect = completed.getRedirectTo();
+
+      LOGGER.debug("LOGIN REDIRECT == {0}", completed.getRedirectTo());
+
+      rc.response().putHeader(HttpHeaders.LOCATION, redirect).setStatusCode(HttpResponseStatus.FOUND.code()).end();
+      rc.next();
+    } else {
+      engine.render(new JsonObject().put(LOGIN_CHALLENGE, challenge), "assets/login.hbs", res -> {
+        if (res.succeeded()) {
+          rc.response().end(res.result());
+        } else {
+          rc.response().end(res.cause().getMessage());
+        }
+      });
+    }
+  }
 
   public void login(RoutingContext rc) {
-    String challenge = rc.request().getParam("login_challenge");
+    String challenge = rc.request().getParam(LOGIN_CHALLENGE);
+    String email = rc.request().getParam("email");
+    String password = rc.request().getParam("password");
 
-    LoginRequest loginResquest = hydraService.getLoginRequest(challenge);
-      AcceptLoginRequest body = new AcceptLoginRequest();
-      body.subject("test");
-      CompletedRequest completed = hydraService.acceptLoginRequest(challenge, body);
+    userRepository.findUserByEmailAndPassword(email, password, res -> {
+      if (res.succeeded() && Objects.nonNull(res.result())) {
+        AcceptLoginRequest body = new AcceptLoginRequest();
+        body.subject(res.result().getEmail());
+        body.setRememberFor(Constants.EXPIRES_TOKEN);
+        body.setRemember(rc.request().getParam("remember") != null);
 
-      String redirect = completed.getRedirectTo();
-      LOGGER.info("LOGIN REDIRECT == {0}", completed.getRedirectTo());
-      rc.response().putHeader("location", redirect).setStatusCode(302).end();
-      rc.next();
+        CompletedRequest completed = hydraService.acceptLoginRequest(challenge, body);
+
+        LOGGER.info("LOGIN REDIRECT == {0}", completed.getRedirectTo());
+        rc.response().putHeader(HttpHeaders.LOCATION, completed.getRedirectTo()).setStatusCode(HttpResponseStatus.FOUND.code()).end();
+        rc.next();
+      } else {
+        hydraService.rejectLoginRequest(challenge, new RejectRequest().error("Invalid credentials"));
+        throw new UnauthorizedException("Invalid Credentials");
+      }
+    });
+  }
+
+  public void getConsent(RoutingContext rc) {
+    String challenge = rc.request().getParam(CONSENT_CHALLENGE);
+    ConsentRequest consentRequest = hydraService.getConsentRequest(challenge);
+    consentRequest.getRequestedScope();
+
+    JsonObject data = new JsonObject();
+    data.put(CONSENT_CHALLENGE, challenge);
+    data.put("user", consentRequest.getSubject());
+    data.put("client_name", Objects.requireNonNull(consentRequest.getClient()).getClientName());
+    data.put("client_id", consentRequest.getClient().getClientId());
+    data.put("scopes", consentRequest.getRequestedScope());
+
+    engine.render(data, "assets/consent.hbs", res -> {
+      if (res.succeeded()) {
+        rc.response().end(res.result());
+      } else {
+        rc.response().end(res.cause().getMessage());
+      }
+    });
   }
 
   public void consent(RoutingContext rc) {
     LOGGER.info("CONSENT ============");
+    String challenge = rc.request().getParam(CONSENT_CHALLENGE);
+    String remember = rc.request().getParam("remember");
+    List<String> grantScope = rc.request().params().getAll("grant_scope");
 
-    ConsentRequest consentRequest = hydraService.getConsentRequest(rc.request().getParam("consent_challenge"));
     AcceptConsentRequest body = new AcceptConsentRequest();
-    body.grantScope(consentRequest.getRequestedScope());
-    body.grantAccessTokenAudience(consentRequest.getRequestedAccessTokenAudience());
-    body.remember(false);
-    body.rememberFor(3600L);
+    body.grantScope(grantScope);
+    body.remember(remember != null);
+    body.rememberFor(Constants.EXPIRES_TOKEN);
 
-    CompletedRequest acceptConsent = hydraService.acceptConsentRequest(consentRequest.getChallenge(), body);
+    CompletedRequest acceptConsent = hydraService.acceptConsentRequest(challenge, body);
 
-    String redirect = acceptConsent.getRedirectTo();
-    LOGGER.info("ACCEPT REDIRECT ============ {0}", redirect);
-    rc.response().putHeader("location", redirect).setStatusCode(302).end();
+    LOGGER.info("ACCEPT REDIRECT ======= {0}", acceptConsent.getRedirectTo());
+    rc.response().putHeader(HttpHeaders.LOCATION, acceptConsent.getRedirectTo()).setStatusCode(HttpResponseStatus.FOUND.code()).end();
     rc.next();
   }
 
   public void callback(RoutingContext rc) {
     LOGGER.info("CALLBACK == {0}", rc.request().params().toString());
 
-    JsonObject tokenConfig = new JsonObject();
-    tokenConfig.put("access_token", rc.request().params().get("code"));
-    tokenConfig.put("scope", rc.request().params().get("scope"));
-    tokenConfig.put("redirect_uri", "http://localhost:4444/oauth2/auth");
-
     JsonObject authenticate = new JsonObject()
             .put("code", rc.request().params().get("code"))
-            .put("grant_type", "client_credentials")
             .put("redirect_uri", "http://localhost:9090/api-users/auth-callback");
 
     oauth2.authenticate(authenticate, res -> {
       if (res.failed()) {
         LOGGER.info("OAUTH AUTHENTICATED FAILED {0}", res.cause().getMessage());
-        rc.response().setStatusCode(500).end("FAILED TO AUTHENTICATED");
+        rc.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end("FAILED TO AUTHENTICATED");
       } else {
         // save the token and continue...
         LOGGER.info("OAUTH AUTHENTICATED RESULT {0}", res.result());
+        rc.setUser(res.result());
 
-        OAuth2TokenIntrospection test = hydraService.instrospect(res.result().principal().getString("access_token"), "offline");
+        OAuth2TokenIntrospection test = hydraService.instrospect(res.result().principal().getString("access_token"), null);
         LOGGER.info("HYDRA INTROSPECT ===== {0}", test.toString());
 
-        rc.response().setStatusCode(200).end(res.result().principal().getString("access_token"));
+        rc.response().setStatusCode(HttpResponseStatus.OK.code()).end(res.result().principal().encodePrettily());
       }
     });
   }

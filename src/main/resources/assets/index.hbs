@@ -1,0 +1,17 @@
+<html>
+<head>
+  <title>{{title}}</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+  <h1>{{title}}</h1>
+  <ol>
+  {{#each seasons}}
+    <li>{{this.name}}</li>
+  {{/each}}
+  </ol>
+  <p>Total : {{seasons.length}}</p>
+
+  <a href="page1.html">Public page - no login required</a>
+</body>
+</html>
