@@ -20,9 +20,9 @@ services:
       serve all --dangerous-force-http
     environment:
       - URLS_SELF_ISSUER=http://localhost:4444
-      - URLS_CONSENT=http://localhost:9090/api-users/consent
-      - URLS_LOGIN=http://localhost:9090/api-users/login
-      - URLS_LOGOUT=http://localhost:9090/api-users/logout
+      - URLS_CONSENT=http://localhost:9090/api-user-management/consent
+      - URLS_LOGIN=http://localhost:9090/api-user-management/login
+      - URLS_LOGOUT=http://localhost:9090/api-user-management/logout
       - DSN=postgres://dbuser:secret@postgresd:5432/accesscontroldb?sslmode=disable&max_conns=20&max_idle_conns=4
       - SECRETS_SYSTEM=youReallyNeedToChangeThis
       - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise

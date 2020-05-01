@@ -46,7 +46,7 @@ _________________________
         --grant-types client_credentials,authorization_code,refresh_token \
         --response-types code,id_token \
         --scope openid,offline \
-        --callbacks http://localhost:9090/api-users/auth-callback
+        --callbacks http://localhost:9090/api-user-management/auth-callback
   
 
 __________________________________________________

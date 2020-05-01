@@ -45,7 +45,7 @@ public class RequestHelper {
       rc.response()
               .putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_JSON_UTF8)
               .setStatusCode(HttpResponseStatus.FOUND.code())
-              .putHeader(HttpHeaders.LOCATION, "http://localhost:9090/api-users/authorize").end();
+              .putHeader(HttpHeaders.LOCATION, "http://localhost:9090/api-user-management/authorize").end();
     }
     rc.next();
   }

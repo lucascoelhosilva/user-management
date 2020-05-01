@@ -51,7 +51,7 @@ public class AuthenticationHandler {
     String state = UUID.randomUUID().toString();
 
     String authorizationUri = oauth2.authorizeURL(new JsonObject()
-            .put("redirect_uri", "http://localhost:9090/api-users/auth-callback")
+            .put("redirect_uri", "http://localhost:9090/api-user-management/auth-callback")
             .put("scope", "offline openid")
             .put("state", state));
 
@@ -159,7 +159,7 @@ public class AuthenticationHandler {
 
     JsonObject authenticate = new JsonObject()
             .put("code", rc.request().params().get("code"))
-            .put("redirect_uri", "http://localhost:9090/api-users/auth-callback");
+            .put("redirect_uri", "http://localhost:9090/api-user-management/auth-callback");
 
     oauth2.authenticate(authenticate, res -> {
       if (res.failed()) {
