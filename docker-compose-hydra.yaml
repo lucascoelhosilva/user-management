@@ -57,8 +57,6 @@ services:
     depends_on:
       - keto-migrate
     environment:
-      - CORS_ENABLED=true
-      - CORS_ALLOWED_METHODS=POST,GET,PUT,DELETE
       - LOG_LEVEL=debug
       - DSN=postgres://dbuser:secret@postgresd:5432/accesscontroldb?sslmode=disable
     command:

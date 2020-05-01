@@ -104,8 +104,10 @@ public class UserEndpointVerticle extends AbstractVerticle {
       ctx.response().setStatusCode(exception.statusCode()).end(error.encode());
     });
 
-    subRouter.post("/keto").handler(ketoService::upsertOryAccessControlPolicy);
-    subRouter.get("/keto").handler(ketoService::listAccessControlPolicyRoles);
+    subRouter.post("/keto/policies").handler(ketoService::upsertOryAccessControlPolicy);
+    subRouter.get("/keto/policies").handler(ketoService::listAccessControlPolicies);
+    subRouter.get("/keto/roles").handler(ketoService::listAccessControlPolicyRoles);
+    subRouter.post("/keto/roles").handler(ketoService::upsertAccessControlPolicyRole);
 
     subRouter.post("/register").handler(userHandler::create);
     subRouter.get("/authorize").handler(authHandler::authorize);
@@ -173,12 +175,12 @@ public class UserEndpointVerticle extends AbstractVerticle {
     allowHeaders.add("accept");
     // CORS support
     router.route().handler(CorsHandler.create("*")
-      .allowedHeaders(allowHeaders)
-      .allowedMethod(HttpMethod.GET)
-      .allowedMethod(HttpMethod.POST)
-      .allowedMethod(HttpMethod.DELETE)
-      .allowedMethod(HttpMethod.PATCH)
-      .allowedMethod(HttpMethod.PUT)
+            .allowedHeaders(allowHeaders)
+            .allowedMethod(HttpMethod.GET)
+            .allowedMethod(HttpMethod.POST)
+            .allowedMethod(HttpMethod.DELETE)
+            .allowedMethod(HttpMethod.PATCH)
+            .allowedMethod(HttpMethod.PUT)
     );
   }
 }

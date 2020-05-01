@@ -1,9 +1,9 @@
 [
   {
-    "id": "resources:oathkeeper:rules:resource-server-oathkeeper",
+    "id": "resources:oathkeeper:rules:user-management-oathkeeper",
+    "version": "v0.36.0-beta.4",
     "upstream": {
-      "url": "http://user-management:9090/api-users/users",
-      "preserve_host": true
+      "url": "http://user-management:9090/api-user-management/users"
     },
     "match": {
       "url": "http://<127.0.0.1|localhost|oathkeeper>:4455/users",
@@ -28,6 +28,77 @@
         "required_resource": "user-management:user",
         "flavor": "exact"
       }
+    },
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "resources:oathkeeper:rules:user-management-oathkeeper",
+    "upstream": {
+      "url": "http://user-management:9090/api-user-management/users"
+    },
+    "match": {
+      "url": "http://<127.0.0.1|localhost|oathkeeper>:4455/users",
+      "methods": [
+        "PUT"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "offline"
+          ]
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "keto_engine_acp_ory",
+      "config": {
+        "required_action": "put",
+        "required_resource": "user-management:user",
+        "flavor": "exact"
+      }
+    },
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "allow-anonymous-with-header-mutator",
+    "version": "v0.36.0-beta.4",
+    "upstream": {
+      "url": "https://httpbin.org/anything/header"
+    },
+    "match": {
+      "url": "http://<127.0.0.1|localhost>:4455/anything/header",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "anonymous"
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
     },
     "mutators": [
       {

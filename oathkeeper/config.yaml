@@ -40,7 +40,7 @@ mutators:
 
 authenticators:
   anonymous:
-    enabled: false
+    enabled: true
     config:
       subject: guest
   oauth2_introspection:
@@ -59,6 +59,3 @@ authorizers:
       required_action: get
       required_resource: blog_posts:my-first-blog-post
     enabled: true
-
-log:
-  level: debug
