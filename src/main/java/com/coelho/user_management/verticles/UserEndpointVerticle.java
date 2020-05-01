@@ -19,10 +19,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2ClientOptions;
-import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.common.template.TemplateEngine;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CookieHandler;
@@ -44,7 +42,6 @@ public class UserEndpointVerticle extends AbstractVerticle {
   protected JDBCClient jdbcClient;
   protected OAuth2Auth oauth2;
   protected HydraService hydraService;
-  protected WebClient client;
 
   @Override
   public void init(Vertx vertx, Context context) {
@@ -58,8 +55,6 @@ public class UserEndpointVerticle extends AbstractVerticle {
     createTableIfNeeded();
 
     hydraService = new HydraService(config().getString("HYDRA_ADMIN_URL"));
-
-    client = WebClient.create(vertx);
 
     oauth2 = OAuth2Auth.create(vertx, new OAuth2ClientOptions()
             .setClientID("auth-code-client")
@@ -94,22 +89,6 @@ public class UserEndpointVerticle extends AbstractVerticle {
     SessionHandler sessionHandler = SessionHandler.create(store);
     subRouter.route().handler(sessionHandler);
     subRouter.route().handler(UserSessionHandler.create(oauth2));
-
-//    subRouter.route().handler(ctx -> {
-//      // Send a HEAD request
-//      client
-//              .request(ctx.request().method(), 4455, "oathkeeper", "/users")
-//              .putHeader("Authorization", "bearer " + ctx.request().headers().get("Authorization")).send(ar -> {
-//                if (ar.succeeded()) {
-//                  // Obtain response
-//                  HttpResponse<Buffer> response = ar.result();
-//                  System.out.println("Received response with status code" + response.statusCode());
-//                } else {
-//                  System.out.println("Something went wrong " + ar.cause().getMessage());
-//                }
-//              });
-//      ctx.next();
-//    });
 
     // handlerError
     subRouter.route().failureHandler(ctx -> {

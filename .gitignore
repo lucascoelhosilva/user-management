@@ -6,7 +6,7 @@
 
 
 README.adoc
-api-manager-users.iml
+user-management.iml
 mvnw
 mvnw.cmd
 target/

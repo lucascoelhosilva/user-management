@@ -12,5 +12,5 @@ public class Constants {
 
   public static final Long EXPIRES_TOKEN = 3600L;
 
-  public static final String HEADER_AUTHORIZATION = "authorization";
+  public static final String HEADER_AUTHORIZATION = "Authorization";
 }

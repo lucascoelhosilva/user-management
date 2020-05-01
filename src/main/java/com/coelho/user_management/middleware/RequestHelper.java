@@ -32,7 +32,7 @@ public class RequestHelper {
     }
 
     if(nonNull(user) || rc.request().headers().get("Authorization") != null) {
-      String token = user !=null ? user.principal().getString("access_token") : rc.request().headers().get("Authorization");
+      String token = user !=null ? user.principal().getString("access_token") : rc.request().headers().get(Constants.HEADER_AUTHORIZATION);
       OAuth2TokenIntrospection introspection = hydraService.instrospect(token, null);
       if (introspection.getActive().equals(false)) {
         LOGGER.error("token active ==== {0}", introspection.getActive());
