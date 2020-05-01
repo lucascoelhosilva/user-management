@@ -1,4 +1,4 @@
-package com.coelho.api_manager_users.helper;
+package com.coelho.user_management.helper;
 
 import io.vertx.core.json.JsonArray;
 

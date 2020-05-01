@@ -4,25 +4,34 @@ services:
     image: postgres
     container_name: postgresdb
     environment:
-      POSTGRES_PASSWORD: api-manager-users
-      POSTGRES_USER: api-manager-users
-      POSTGRES_DB: api_manager_users
-  api-manager-user:
-    container_name: api-manager-users
-    image: api-manager-users
+      POSTGRES_PASSWORD: user-management
+      POSTGRES_USER: user-management
+      POSTGRES_DB: user_management
+    networks:
+      - intranet
+  user-management:
+    container_name: user-management
+    image: user-management
     build: .
     environment:
       JAVA_OPTS: "-Djava.security.egd=file:/dev/./urandom -XX:+UseParallelGC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:9009 -Xmx256m"
       HTTP_PORT: 9090
       LOGGING_LEVEL: debug
-      DATABASE_URL: "jdbc:postgresql://db:5432/api_manager_users"
-      DATABASE_USER: "api-manager-users"
-      DATABASE_PASSWORD: "api-manager-users"
+      DATABASE_URL: "jdbc:postgresql://db:5432/user_management"
+      DATABASE_USER: "user-management"
+      DATABASE_PASSWORD: "user-management"
       DATABASE_DRIVER_CLASS: "org.postgresql.Driver"
       HYDRA_PUBLIC_URL: "http://localhost:4444"
       HYDRA_ADMIN_URL: "http://hydra:4445"
+      KETO_URL: "http://keto:4466"
     ports:
       - "9090:9090"
       - "9009:9009"
     depends_on:
       - db
+    networks:
+      - intranet
+
+networks:
+  intranet:
+    driver: bridge

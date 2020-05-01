@@ -1,4 +1,4 @@
-package com.coelho.api_manager_users.constants;
+package com.coelho.user_management.constants;
 
 public class Constants {
 

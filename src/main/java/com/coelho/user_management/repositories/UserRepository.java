@@ -1,7 +1,7 @@
-package com.coelho.api_manager_users.repositories;
+package com.coelho.user_management.repositories;
 
-import com.coelho.api_manager_users.helper.FindOptions;
-import com.coelho.api_manager_users.models.User;
+import com.coelho.user_management.helper.FindOptions;
+import com.coelho.user_management.models.User;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;

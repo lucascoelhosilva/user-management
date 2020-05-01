@@ -1,12 +1,12 @@
-package com.coelho.api_manager_users.verticles;
+package com.coelho.user_management.verticles;
 
-import com.coelho.api_manager_users.constants.Constants;
-import com.coelho.api_manager_users.exceptions.Exception;
-import com.coelho.api_manager_users.handlers.AuthenticationHandler;
-import com.coelho.api_manager_users.handlers.HealthHandler;
-import com.coelho.api_manager_users.handlers.UserHandler;
-import com.coelho.api_manager_users.hydra.HydraService;
-import com.coelho.api_manager_users.middleware.RequestHelper;
+import com.coelho.user_management.constants.Constants;
+import com.coelho.user_management.exceptions.Exception;
+import com.coelho.user_management.handlers.AuthenticationHandler;
+import com.coelho.user_management.handlers.HealthHandler;
+import com.coelho.user_management.handlers.UserHandler;
+import com.coelho.user_management.security.HydraService;
+import com.coelho.user_management.security.KetoService;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
@@ -19,11 +19,18 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2ClientOptions;
+import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.common.template.TemplateEngine;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.CorsHandler;
+import io.vertx.ext.web.handler.SessionHandler;
+import io.vertx.ext.web.handler.UserSessionHandler;
+import io.vertx.ext.web.sstore.LocalSessionStore;
+import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
 
 import java.util.HashSet;
@@ -37,6 +44,7 @@ public class UserEndpointVerticle extends AbstractVerticle {
   protected JDBCClient jdbcClient;
   protected OAuth2Auth oauth2;
   protected HydraService hydraService;
+  protected WebClient client;
 
   @Override
   public void init(Vertx vertx, Context context) {
@@ -50,6 +58,8 @@ public class UserEndpointVerticle extends AbstractVerticle {
     createTableIfNeeded();
 
     hydraService = new HydraService(config().getString("HYDRA_ADMIN_URL"));
+
+    client = WebClient.create(vertx);
 
     oauth2 = OAuth2Auth.create(vertx, new OAuth2ClientOptions()
             .setClientID("auth-code-client")
@@ -70,13 +80,38 @@ public class UserEndpointVerticle extends AbstractVerticle {
     final UserHandler userHandler = new UserHandler(jdbcClient);
     final AuthenticationHandler authHandler = new AuthenticationHandler(jdbcClient, oauth2, hydraService, engine);
     final HealthHandler healthHandler = new HealthHandler(getVertx(), jdbcClient);
-    final RequestHelper requestHelper = new RequestHelper(hydraService);
+    final KetoService ketoService = new KetoService(config().getString("KETO_URL"));
 
     Router subRouter = Router.router(getVertx());
     enableCorsSupport(subRouter);
 
     subRouter.route().handler(BodyHandler.create());
 
+    CookieHandler cookieHandler = CookieHandler.create();
+    subRouter.route().handler(cookieHandler);
+    // Session Handler
+    SessionStore store = LocalSessionStore.create(vertx);
+    SessionHandler sessionHandler = SessionHandler.create(store);
+    subRouter.route().handler(sessionHandler);
+    subRouter.route().handler(UserSessionHandler.create(oauth2));
+
+//    subRouter.route().handler(ctx -> {
+//      // Send a HEAD request
+//      client
+//              .request(ctx.request().method(), 4455, "oathkeeper", "/users")
+//              .putHeader("Authorization", "bearer " + ctx.request().headers().get("Authorization")).send(ar -> {
+//                if (ar.succeeded()) {
+//                  // Obtain response
+//                  HttpResponse<Buffer> response = ar.result();
+//                  System.out.println("Received response with status code" + response.statusCode());
+//                } else {
+//                  System.out.println("Something went wrong " + ar.cause().getMessage());
+//                }
+//              });
+//      ctx.next();
+//    });
+
+    // handlerError
     subRouter.route().failureHandler(ctx -> {
       Exception exception = (Exception) ctx.failure();
       final JsonObject error = new JsonObject()
@@ -87,10 +122,13 @@ public class UserEndpointVerticle extends AbstractVerticle {
       if(exception.getMessage() != null) {
         error.put("message", exception.getMessage());
       }
-      ctx.response().setStatusCode(exception.statusCode());
-      ctx.response().end(error.encode());
+      ctx.response().setStatusCode(exception.statusCode()).end(error.encode());
     });
 
+    subRouter.post("/keto").handler(ketoService::upsertOryAccessControlPolicy);
+    subRouter.get("/keto").handler(ketoService::listAccessControlPolicyRoles);
+
+    subRouter.post("/register").handler(userHandler::create);
     subRouter.get("/authorize").handler(authHandler::authorize);
     subRouter.get("/login").handler(authHandler::getLogin);
     subRouter.post("/login").handler(authHandler::login);
@@ -98,7 +136,7 @@ public class UserEndpointVerticle extends AbstractVerticle {
     subRouter.post("/consent").handler(authHandler::consent);
     subRouter.get("/auth-callback").handler(authHandler::callback);
 
-    subRouter.route("/users*").handler(requestHelper::validateAccessToKen);
+//    subRouter.route("/users*").handler(requestHelper::validateAccessToKen);
     subRouter.get("/users/count").handler(userHandler::count);
     subRouter.get("/users").handler(userHandler::findAll);
     subRouter.get("/users/:UUID").handler(userHandler::findById);

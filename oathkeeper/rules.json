@@ -1,0 +1,43 @@
+[
+  {
+    "id": "resources:oathkeeper:rules:resource-server-oathkeeper",
+    "upstream": {
+      "url": "http://user-management:9090/api-users/users",
+      "preserve_host": true
+    },
+    "match": {
+      "url": "http://<127.0.0.1|localhost|oathkeeper>:4455/users",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "oauth2_introspection",
+        "config": {
+          "required_scope": [
+            "offline"
+          ]
+        }
+      }
+    ],
+    "authorizer": {
+      "handler": "keto_engine_acp_ory",
+      "config": {
+        "required_action": "get",
+        "required_resource": "user-management:user",
+        "flavor": "exact"
+      }
+    },
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}"
+          }
+        }
+      }
+    ]
+  }
+]

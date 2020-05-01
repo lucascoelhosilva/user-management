@@ -1,9 +1,9 @@
-package com.coelho.api_manager_users.handlers;
+package com.coelho.user_management.handlers;
 
-import com.coelho.api_manager_users.constants.Constants;
-import com.coelho.api_manager_users.helper.FindOptions;
-import com.coelho.api_manager_users.models.User;
-import com.coelho.api_manager_users.repositories.UserRepository;
+import com.coelho.user_management.constants.Constants;
+import com.coelho.user_management.helper.FindOptions;
+import com.coelho.user_management.models.User;
+import com.coelho.user_management.repositories.UserRepository;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.Json;

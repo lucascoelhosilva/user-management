@@ -1,4 +1,4 @@
-package com.coelho.api_manager_users.exceptions;
+package com.coelho.user_management.exceptions;
 
 public abstract class Exception extends RuntimeException {
 

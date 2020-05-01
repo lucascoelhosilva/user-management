@@ -1,4 +1,4 @@
-package com.coelho.api_manager_users;
+package com.coelho.user_management;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;

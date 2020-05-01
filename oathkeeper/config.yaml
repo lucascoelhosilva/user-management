@@ -1,0 +1,64 @@
+serve:
+  proxy:
+    port: 4455 # run the proxy at port 4455
+  api:
+    port: 4456 # run the api at port 4456
+
+access_rules:
+  repositories:
+    - file:///rules.json
+
+errors:
+  fallback:
+    - json
+  handlers:
+    json:
+      enabled: true
+      config:
+        verbose: true
+    redirect:
+      enabled: true
+      config:
+        to: https://www.ory.sh/docs
+
+mutators:
+  header:
+    enabled: true
+    config:
+      headers:
+        X-User: "{{ print .Subject }}"
+        # You could add some other headers, for example with data from the
+        # session.
+        # X-Some-Arbitrary-Data: "{{ print .Extra.some.arbitrary.data }}"
+  noop:
+    enabled: true
+  id_token:
+    enabled: true
+    config:
+      issuer_url: http://localhost:4455/
+      jwks_url: file:///jwks.json
+
+authenticators:
+  anonymous:
+    enabled: false
+    config:
+      subject: guest
+  oauth2_introspection:
+    config:
+      introspection_url: http://hydra:4445/oauth2/introspect
+    enabled: true
+
+authorizers:
+  allow:
+    enabled: true
+  deny:
+    enabled: true
+  keto_engine_acp_ory:
+    config:
+      base_url: http://keto:4466/
+      required_action: get
+      required_resource: blog_posts:my-first-blog-post
+    enabled: true
+
+log:
+  level: debug

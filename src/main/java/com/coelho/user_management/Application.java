@@ -1,6 +1,6 @@
-package com.coelho.api_manager_users;
+package com.coelho.user_management;
 
-import com.coelho.api_manager_users.verticles.UserEndpointVerticle;
+import com.coelho.user_management.verticles.UserEndpointVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;

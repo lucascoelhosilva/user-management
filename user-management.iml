@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" version="4">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_11">
+    <output url="file://$MODULE_DIR$/target/classes" />
+    <output-test url="file://$MODULE_DIR$/target/test-classes" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: sh.ory.hydra:hydra-client:1.4.5" level="project" />
+    <orderEntry type="library" name="Maven: io.swagger:swagger-annotations:1.5.22" level="project" />
+    <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:3.0.2" level="project" />
+    <orderEntry type="library" name="Maven: com.squareup.okhttp3:okhttp:3.14.2" level="project" />
+    <orderEntry type="library" name="Maven: com.squareup.okio:okio:1.17.2" level="project" />
+    <orderEntry type="library" name="Maven: com.squareup.okhttp3:logging-interceptor:3.14.2" level="project" />
+    <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.5" level="project" />
+    <orderEntry type="library" name="Maven: io.gsonfire:gson-fire:1.8.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.oltu.oauth2:org.apache.oltu.oauth2.client:1.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.oltu.oauth2:org.apache.oltu.oauth2.common:1.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.json:json:20140107" level="project" />
+    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.9" level="project" />
+    <orderEntry type="library" name="Maven: org.threeten:threetenbp:1.4.0" level="project" />
+    <orderEntry type="library" name="Maven: javax.annotation:jsr250-api:1.0" level="project" />
+    <orderEntry type="library" name="Maven: sh.ory.keto:keto-client:0.5.4-alpha.1" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-auth-oauth2:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-auth-common:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-jwt:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-core:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-common:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-handler:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-handler-proxy:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec-socks:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec-http:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec-http2:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-resolver:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-resolver-dns:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec-dns:4.1.48.Final" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.10.2" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.10.2" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.10.2" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-config:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-health-check:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-web:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-web-common:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-bridge-common:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-web-client:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-jdbc-client:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-sql-common:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: com.mchange:c3p0:0.9.5.4" level="project" />
+    <orderEntry type="library" name="Maven: com.mchange:mchange-commons-java:0.2.15" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-web-templ-handlebars:shaded:3.9.0" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jknack:handlebars:4.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.21" level="project" />
+    <orderEntry type="library" name="Maven: org.postgresql:postgresql:9.4.1212" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-junit5:3.9.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-rx-java:3.9.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.reactivex:rxjava:1.3.8" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-rx-gen:3.9.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-codegen:3.9.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.mvel:mvel2:2.3.1.Final" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-rx-java2:3.9.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.reactivex.rxjava2:rxjava:2.2.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.reactivestreams:reactive-streams:1.0.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-api:5.4.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.apiguardian:apiguardian-api:1.0.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.opentest4j:opentest4j:1.1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-commons:1.4.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-engine:5.4.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-engine:1.4.0" level="project" />
+  </component>
+</module>

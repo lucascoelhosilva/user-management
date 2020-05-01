@@ -1,5 +1,15 @@
 version: '3.1'
 services:
+  postgresd:
+    image: postgres:9.6
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=accesscontroldb
+    networks:
+      - intranet
   hydra:
     image: oryd/hydra:latest
     ports:
@@ -13,23 +23,62 @@ services:
       - URLS_CONSENT=http://localhost:9090/api-users/consent
       - URLS_LOGIN=http://localhost:9090/api-users/login
       - URLS_LOGOUT=http://localhost:9090/api-users/logout
-      - DSN=postgres://hydra:secret@postgresd:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
+      - DSN=postgres://dbuser:secret@postgresd:5432/accesscontroldb?sslmode=disable&max_conns=20&max_idle_conns=4
       - SECRETS_SYSTEM=youReallyNeedToChangeThis
       - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
       - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
     restart: unless-stopped
+    networks:
+      - intranet
   hydra-migrate:
     image: oryd/hydra:latest
     environment:
-      - DSN=postgres://hydra:secret@postgresd:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
+      - DSN=postgres://dbuser:secret@postgresd:5432/accesscontroldb?sslmode=disable&max_conns=20&max_idle_conns=4
     command:
       migrate sql -e --yes
     restart: on-failure
-  postgresd:
-    image: postgres:9.6
-    ports:
-      - "5432:5432"
+    networks:
+      - intranet
+
+  keto-migrate:
+    image: oryd/keto:latest
     environment:
-      - POSTGRES_USER=hydra
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=hydra
+      - DSN=postgres://dbuser:secret@postgresd:5432/accesscontroldb?sslmode=disable
+    depends_on:
+      - postgresd
+    command:
+      migrate sql -e
+    networks:
+      - intranet
+  keto:
+    image: oryd/keto:latest
+    ports:
+      - "4466:4466"
+    depends_on:
+      - keto-migrate
+    environment:
+      - CORS_ENABLED=true
+      - CORS_ALLOWED_METHODS=POST,GET,PUT,DELETE
+      - LOG_LEVEL=debug
+      - DSN=postgres://dbuser:secret@postgresd:5432/accesscontroldb?sslmode=disable
+    command:
+      serve
+    networks:
+      - intranet
+  oathkeeper:
+    image: api-manager-users_oathkeeper:latest
+    build:
+      context: ./oathkeeper
+      dockerfile: Dockerfile
+    ports:
+      - 4455:4455 #run the proxy at port 4455
+      - 4456:4456 #run the api at port 4456
+    command:
+      serve
+      --config /config.yaml
+    networks:
+      - intranet
+
+networks:
+  intranet:
+    driver: bridge

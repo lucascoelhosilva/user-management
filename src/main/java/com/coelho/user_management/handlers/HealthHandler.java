@@ -1,4 +1,4 @@
-package com.coelho.api_manager_users.handlers;
+package com.coelho.user_management.handlers;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;

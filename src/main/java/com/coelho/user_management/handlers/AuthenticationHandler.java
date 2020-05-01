@@ -1,18 +1,20 @@
-package com.coelho.api_manager_users.handlers;
+package com.coelho.user_management.handlers;
 
-import com.coelho.api_manager_users.constants.Constants;
-import com.coelho.api_manager_users.exceptions.UnauthorizedException;
-import com.coelho.api_manager_users.hydra.HydraService;
-import com.coelho.api_manager_users.repositories.UserRepository;
+import com.coelho.user_management.constants.Constants;
+import com.coelho.user_management.exceptions.UnauthorizedException;
+import com.coelho.user_management.security.HydraService;
+import com.coelho.user_management.repositories.UserRepository;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.Session;
 import io.vertx.ext.web.common.template.TemplateEngine;
 import sh.ory.hydra.model.AcceptConsentRequest;
 import sh.ory.hydra.model.AcceptLoginRequest;
@@ -165,8 +167,11 @@ public class AuthenticationHandler {
         rc.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end("FAILED TO AUTHENTICATED");
       } else {
         // save the token and continue...
-        LOGGER.info("OAUTH AUTHENTICATED RESULT {0}", res.result());
+        LOGGER.info("OAUTH AUTHENTICATED RESULT {0}", res.result().principal().toString());
         rc.setUser(res.result());
+        Session session = rc.session();
+        User user = res.result();
+        session.put("user", user);
 
         OAuth2TokenIntrospection test = hydraService.instrospect(res.result().principal().getString("access_token"), null);
         LOGGER.info("HYDRA INTROSPECT ===== {0}", test.toString());

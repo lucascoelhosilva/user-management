@@ -1,4 +1,4 @@
-package com.coelho.api_manager_users.models;
+package com.coelho.user_management.models;
 
 import io.vertx.core.json.JsonObject;
 

@@ -1,6 +1,6 @@
-package com.coelho.api_manager_users.hydra;
+package com.coelho.user_management.security;
 
-import com.coelho.api_manager_users.exceptions.CustomException;
+import com.coelho.user_management.exceptions.CustomException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import sh.ory.hydra.ApiClient;
