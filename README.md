@@ -2,7 +2,7 @@
 
 sample application using Ory open source projects
 
-<!-- [![Ory](https://www.ory.sh/docs/img/docs/ory-ecosystem.png)](https://www.ory.sh/) -->
+[![Ory](https://www.ory.sh/docs/img/docs/ory-ecosystem.png)](https://www.ory.sh/)
 
 #### Requirements
 
