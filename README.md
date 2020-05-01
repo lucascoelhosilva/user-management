@@ -53,6 +53,8 @@ __________________________________________________
   
 4 - register user
         
+        admin
+        
         curl --location --request POST 'http://localhost:9090/api-user-management/register' \
         --header 'Content-Type: application/json' \
         --data-raw '{
@@ -60,9 +62,21 @@ __________________________________________________
         	"email": "admin@admin.com",
         	"password": "123"
         }'
+        
+        user
+                
+        curl --location --request POST 'http://localhost:9090/api-user-management/register' \
+        --header 'Content-Type: application/json' \
+        --data-raw '{
+            "name": "user",
+            "email": "user@user.com",
+            "password": "123"
+        }'
 
 
 5 - create policies 
+
+    admin
 
     curl --location --request POST 'http://localhost:9090/api-user-management/keto/policies' \
     --header 'Content-Type: application/json' \
@@ -77,7 +91,25 @@ __________________________________________________
       "conditions": null
     }'
     
+    user 
+    
+    curl --location --request POST 'http://localhost:9090/api-user-management/keto/policies' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+      "description": "policy user",
+      "subjects": ["user"],
+      "effect": "allow",
+      "resources": [
+          "user-management:user"
+      ],
+      "actions": ["get"],
+      "conditions": null
+    }'
+    
+    
  6 - create role
+    
+    admin
     
     curl --location --request POST 'http://localhost:9090/api-user-management/keto/roles' \
     --header 'Content-Type: application/json' \
@@ -88,3 +120,33 @@ __________________________________________________
       ]
     }'
     
+    user
+    
+    curl --location --request POST 'http://localhost:9090/api-user-management/keto/roles' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+      "id":"user",
+      "members": [
+        "user@user.com"
+      ]
+    }'
+    
+    
+#### Usage
+
+1. login 
+
+```
+http://localhost:9090/api-user-management/authorize
+
+email: admin@admin.com
+email: user@user.com
+
+password: 123
+```
+
+
+```
+curl --location --request GET 'http://localhost:4455/api-user-management/users' \
+--header 'Authorization: Bearer {token}' \
+```

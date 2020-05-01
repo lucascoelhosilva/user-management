@@ -168,10 +168,10 @@ public class AuthenticationHandler {
       } else {
         // save the token and continue...
         LOGGER.info("OAUTH AUTHENTICATED RESULT {0}", res.result().principal().toString());
-        rc.setUser(res.result());
-        Session session = rc.session();
-        User user = res.result();
-        session.put("user", user);
+//        rc.setUser(res.result());
+//        Session session = rc.session();
+//        User user = res.result();
+//        session.put("user", user);
 
         OAuth2TokenIntrospection test = hydraService.instrospect(res.result().principal().getString("access_token"), null);
         LOGGER.info("HYDRA INTROSPECT ===== {0}", test.toString());

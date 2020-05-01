@@ -82,13 +82,13 @@ public class UserEndpointVerticle extends AbstractVerticle {
 
     subRouter.route().handler(BodyHandler.create());
 
-    CookieHandler cookieHandler = CookieHandler.create();
-    subRouter.route().handler(cookieHandler);
-    // Session Handler
-    SessionStore store = LocalSessionStore.create(vertx);
-    SessionHandler sessionHandler = SessionHandler.create(store);
-    subRouter.route().handler(sessionHandler);
-    subRouter.route().handler(UserSessionHandler.create(oauth2));
+//    CookieHandler cookieHandler = CookieHandler.create();
+//    subRouter.route().handler(cookieHandler);
+//    // Session Handler
+//    SessionStore store = LocalSessionStore.create(vertx);
+//    SessionHandler sessionHandler = SessionHandler.create(store);
+//    subRouter.route().handler(sessionHandler);
+//    subRouter.route().handler(UserSessionHandler.create(oauth2));
 
     // handlerError
     subRouter.route().failureHandler(ctx -> {
