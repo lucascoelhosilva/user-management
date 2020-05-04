@@ -20,6 +20,7 @@ services:
       DATABASE_URL: "jdbc:postgresql://db:5432/user_management"
       DATABASE_USER: "user-management"
       DATABASE_PASSWORD: "user-management"
+      DATABASE_NAME: "user_management"
       DATABASE_DRIVER_CLASS: "org.postgresql.Driver"
       HYDRA_PUBLIC_URL: "http://localhost:4444"
       HYDRA_ADMIN_URL: "http://hydra:4445"

@@ -23,12 +23,7 @@ import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.common.template.TemplateEngine;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.CorsHandler;
-import io.vertx.ext.web.handler.SessionHandler;
-import io.vertx.ext.web.handler.UserSessionHandler;
-import io.vertx.ext.web.sstore.LocalSessionStore;
-import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
 
 import java.util.HashSet;
@@ -46,11 +41,13 @@ public class UserEndpointVerticle extends AbstractVerticle {
   @Override
   public void init(Vertx vertx, Context context) {
     super.init(vertx, context);
-      jdbcClient = JDBCClient.createShared(vertx, new JsonObject()
-      .put("url", config().getString("DATABASE_URL"))
-      .put("driver_class", config().getString("DATABASE_DRIVER_CLASS"))
-      .put("user", config().getString("DATABASE_USER"))
-      .put("password", config().getString("DATABASE_PASSWORD")), "api_manager_users");
+
+    jdbcClient = JDBCClient.create(vertx, new JsonObject()
+            .put("url", config().getString("DATABASE_URL"))
+            .put("driver_class", config().getString("DATABASE_DRIVER_CLASS"))
+            .put("user", config().getString("DATABASE_USER"))
+            .put("password", config().getString("DATABASE_PASSWORD"))
+            .put("datasourceName", config().getString("DATABASE_NAME")));
 
     createTableIfNeeded();
 
@@ -82,14 +79,6 @@ public class UserEndpointVerticle extends AbstractVerticle {
 
     subRouter.route().handler(BodyHandler.create());
 
-//    CookieHandler cookieHandler = CookieHandler.create();
-//    subRouter.route().handler(cookieHandler);
-//    // Session Handler
-//    SessionStore store = LocalSessionStore.create(vertx);
-//    SessionHandler sessionHandler = SessionHandler.create(store);
-//    subRouter.route().handler(sessionHandler);
-//    subRouter.route().handler(UserSessionHandler.create(oauth2));
-
     // handlerError
     subRouter.route().failureHandler(ctx -> {
       Exception exception = (Exception) ctx.failure();
@@ -104,7 +93,7 @@ public class UserEndpointVerticle extends AbstractVerticle {
       ctx.response().setStatusCode(exception.statusCode()).end(error.encode());
     });
 
-    subRouter.post("/keto/policies").handler(ketoService::upsertOryAccessControlPolicy);
+    subRouter.post("/keto/policies").handler(ketoService::upsertAccessControlPolicy);
     subRouter.get("/keto/policies").handler(ketoService::listAccessControlPolicies);
     subRouter.get("/keto/roles").handler(ketoService::listAccessControlPolicyRoles);
     subRouter.post("/keto/roles").handler(ketoService::upsertAccessControlPolicyRole);
@@ -117,7 +106,6 @@ public class UserEndpointVerticle extends AbstractVerticle {
     subRouter.post("/consent").handler(authHandler::consent);
     subRouter.get("/auth-callback").handler(authHandler::callback);
 
-//    subRouter.route("/users*").handler(requestHelper::validateAccessToKen);
     subRouter.get("/users/count").handler(userHandler::count);
     subRouter.get("/users").handler(userHandler::findAll);
     subRouter.get("/users/:UUID").handler(userHandler::findById);
@@ -157,7 +145,7 @@ public class UserEndpointVerticle extends AbstractVerticle {
       } else {
         jdbcClient.query(ar.result().toString(), resultSetAsyncResult -> {
           if(resultSetAsyncResult.succeeded()){
-            LOGGER.info("success: {0}", resultSetAsyncResult.result());
+            LOGGER.info("Table created with success");
           } else {
             LOGGER.info("failed: {0}", resultSetAsyncResult.cause().getMessage());
           }

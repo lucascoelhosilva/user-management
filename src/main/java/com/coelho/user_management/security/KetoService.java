@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
+
 public class KetoService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KetoService.class);
@@ -28,11 +30,14 @@ public class KetoService {
         this.ketoUrl = ketoUrl;
     }
 
-    public void upsertOryAccessControlPolicy(RoutingContext rc) {
+    public void upsertAccessControlPolicy(RoutingContext rc) {
         LOGGER.debug("upsert ===== {0}", rc.getBodyAsString());
 
         OryAccessControlPolicy body = rc.getBodyAsJson().mapTo(OryAccessControlPolicy.class);
-        body.setId(UUID.randomUUID().toString());
+
+        if (isNull(body.getId())) {
+            body.setId(UUID.randomUUID().toString());
+        }
 
         String flavor = "exact"; // String | The ORY Access Control Policy flavor. Can be \"regex\", \"glob\", and \"exact\".
 

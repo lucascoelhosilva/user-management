@@ -110,7 +110,7 @@ public class AuthenticationHandler {
         rc.next();
       } else {
         hydraService.rejectLoginRequest(challenge, new RejectRequest().error("Invalid credentials"));
-        throw new UnauthorizedException("Invalid Credentials");
+        rc.fail(new UnauthorizedException("Invalid Credentials"));
       }
     });
   }
